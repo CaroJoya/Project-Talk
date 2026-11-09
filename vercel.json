@@ -5,7 +5,7 @@
     },
     "backend": {
       "root": ".",
-      "entrypoint": "server.py"
+      "entrypoint": "server:app"
     }
   },
   "rewrites": [
