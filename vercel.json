@@ -1,11 +1,10 @@
 {
   "services": {
     "frontend": {
-      "root": ".",
-      "framework": null 
+      "root": "."
     },
     "backend": {
-      "root": ".",
+      "root": "backend",
       "entrypoint": "server:app"
     }
   },
