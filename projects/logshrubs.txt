@@ -1,0 +1,51 @@
+PROJECT: LogShrubs
+TAGLINE: A fast, local-first log analyzer built with Rust.
+
+OVERVIEW:
+LogShrubs is a CLI tool written in Rust that parses application and server logs and turns them into actionable diagnostics. It processes plain text, JSON Lines, Apache, and Nginx logs. It is designed to be extremely fast and memory-efficient, handling files of any size without uploading data to the cloud.
+
+WHAT IT DOES (USER FLOW):
+1. User runs `logshrubs analyze app.log` (or pipes via stdin: `cat app.log | logshrubs`).
+2. The tool auto-detects the log format from the first 20 lines.
+3. It streams the file and calculates stats: line counts, level counts (INFO, ERROR, etc.), and time ranges.
+4. It groups recurring errors (normalizing variable values like IDs to `<NUM>`).
+5. It detects error spikes (using a 5-minute bucket and standard deviation).
+6. It analyzes HTTP logs (status codes, top endpoints, p95/p99 latency).
+7. Output is displayed beautifully in the terminal or as JSON (`--json`).
+
+KEY FEATURES:
+- Supports Text, JSON Lines, Apache, and Nginx formats.
+- Multi-file processing and directory scanning.
+- Error grouping/normalization (e.g., "User 123 failed" → "User <NUM> failed").
+- Spike detection.
+- HTTP analysis (latency percentiles: P95, P99, min, max).
+- Live file watching (`watch` subcommand).
+- Parallel processing using `rayon`.
+- JSON output for integration with `jq` or scripts.
+
+TECH STACK:
+- Rust (2021 Edition).
+- Crates: `clap` (CLI), `serde`/`serde_json`, `regex`, `chrono`, `rayon` (parallelism), `notify` (file watching).
+
+ARCHITECTURE / FILE STRUCTURE:
+- `src/main.rs` - Entry point, command routing.
+- `src/analyzer/` - Core engines (stats, errors, http, spikes, performance).
+- `src/parser/` - Parsers for different log formats.
+- `src/output/` - Terminal (pretty print) and JSON rendering.
+- `src/input.rs` - Streaming file reader and directory resolver.
+- `src/watch.rs` - Live tailing and incremental analysis.
+
+CHALLENGES I SOLVED:
+- **Memory efficiency**: Instead of loading the file into RAM, I built a streaming iterator (`LogReader`) and used a bounded reservoir sampler for latency percentiles (keeps memory flat regardless of file size).
+- **Spike detection algorithm**: Used a 5-minute bucket approach, calculated the mean and standard deviation, and flagged buckets that were >2σ above the mean.
+- **Multi-format parsing**: Created a parser interface that falls back to a plain-text parser if a structured format fails, ensuring no logs are lost.
+
+WHAT I LEARNED:
+- Advanced Rust concepts: lifetimes, traits, iterators, and error handling with `thiserror`.
+- Zero-copy parsing and memory profiling.
+- Statistical algorithms (reservoir sampling, percentiles, standard deviation).
+
+FUTURE IMPROVEMENTS:
+- Add support for more formats (e.g., Syslog).
+- Build a TUI (Terminal User Interface) dashboard.
+- Add a configuration file to allow custom regex parsers.

@@ -1,0 +1,53 @@
+PROJECT: UniLeave
+TAGLINE: A comprehensive, multi-role university leave management system.
+
+OVERVIEW:
+UniLeave is an enterprise-grade leave management system built for universities. It handles the complex approval routing for different staff roles (Faculty, HODs, Registrars, Principals, etc.). It features a multi-tenant architecture (supports multiple colleges), attendance tracking, overwork conversion, and a full audit log system.
+
+WHAT IT DOES (USER FLOW):
+1. **Staff (Faculty/Office Staff)**: Apply for different types of leave (Casual, Earned, Medical, On Duty, Comp-Off, Vacation). View real-time leave balances.
+2. **HOD/Registrar**: Approve or reject leave requests. Send requests back for revision with remarks.
+3. **Principal**: Final approval authority. Can also override already-approved leaves (restoring balances).
+4. **Head Clerk**: Configures the system globally (leave types, quotas per role, vacation periods, and overwork conversion rules). Tracks daily attendance.
+5. **Super Admin**: Manages multi-tenant setup (Colleges, Departments, Users). Has system tools to fix broken data (e.g., balances not restored on cancellation).
+
+KEY FEATURES:
+- Multi-role approval routing (Faculty → HOD → Principal).
+- Comp-Off management (converts overwork hours into leave days).
+- Vacation periods (Summer/Winter) with paid/unpaid day calculations.
+- Automated year-end resets with carry-over rules.
+- Audit logging for every critical action.
+- Real-time notifications (in-app and email).
+- File attachments for leaves (Medical certs, On Duty proofs).
+
+TECH STACK:
+Frontend: Next.js 14 (App Router), React, Tailwind CSS, Shadcn UI, React Query.
+Backend: Next.js API Routes (Serverless), Node.js.
+Database: Firebase Realtime Database (RTDB).
+Auth: Firebase Auth (Session Cookies).
+Email: Nodemailer (SMTP).
+
+ARCHITECTURE / FILE STRUCTURE:
+- `app/api/` - Serverless endpoints (auth, leave, hod, registrar, principal).
+- `app/dashboard/` - Staff dashboard.
+- `app/hod/`, `app/registrar/` - Admin dashboards.
+- `lib/services/` - Business logic (balance deductions, notifications, routing).
+- `lib/firebase/` - Admin and Client SDK initialization.
+- `scripts/` - DB migration and seeding scripts.
+
+CHALLENGES I SOLVED:
+- **Approval Routing**: Built a dynamic routing engine (`determineApprover`) that looks at the user's roles (e.g., HOD who is also a Faculty) to determine if a request needs HOD approval or goes straight to the Principal.
+- **Balance Restoration**: Ensured that if a request is rejected or cancelled, the user's pending/available balances are correctly restored. Created a "System Tools" page to fix historical data where balances were corrupted.
+- **Session Management**: Handled Firebase custom claims and session cookies securely on the server.
+- **Concurrency**: Used database transactions where necessary to prevent double-deduction of leave balances.
+
+WHAT I LEARNED:
+- Enterprise-level role-based access control (RBAC).
+- Handling complex state machines (Draft → Pending → Revision → Approved).
+- Firebase security rules and server-side admin SDK usage.
+- Writing robust APIs with extensive validation.
+
+FUTURE IMPROVEMENTS:
+- Migrate from RTDB to Firestore for better querying and scaling.
+- Add a mobile app (React Native).
+- Build a real-time analytics dashboard for HR.

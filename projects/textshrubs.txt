@@ -1,0 +1,50 @@
+PROJECT: TextShrubs
+TAGLINE: A Chrome extension that defines words and changes text vibes instantly using AI.
+
+OVERVIEW:
+TextShrubs is a lightweight Chrome extension (Manifest V3) designed to improve reading and writing on the web. When a user highlights text on any webpage, a floating box appears. It automatically fetches the dictionary definition of the word and provides options to rewrite the text using AI in different tones (Casual, Professional, Simple, Gossip).
+
+WHAT IT DOES (USER FLOW):
+1. User highlights a word or short phrase (up to 200 chars) on any webpage.
+2. A floating, draggable box appears next to the cursor.
+3. It calls the free Dictionary API to fetch and display the definition.
+4. It shows four AI buttons: Casual, Pro, Simple, and Tea (Gossip).
+5. When clicked, it sends the selected text and the vibe prompt to the OpenAI API (GPT-3.5-turbo).
+6. The transformed text appears in the box.
+7. If no API key is set, it prompts the user to enter one in the extension popup.
+
+KEY FEATURES:
+- Instant definitions via Dictionary API (no key required).
+- AI text transformation via OpenAI (requires user's API key).
+- Floating UI injected directly into the DOM (`z-index: 10000`).
+- Secure API key storage using `chrome.storage.sync`.
+- Text length validation (max 200 characters to save API costs).
+- Draggable box and auto-close when clicking outside.
+
+TECH STACK:
+- Vanilla JavaScript (ES6+), HTML, CSS.
+- Chrome Extensions Manifest V3.
+- APIs: DictionaryAPI.dev (free), OpenAI Chat Completions API.
+
+ARCHITECTURE / FILE STRUCTURE:
+- `manifest.json` - Extension configuration (permissions, content scripts).
+- `content.js` - Main logic injected into pages (detects selection, builds UI, fetches APIs).
+- `popup.html` - Settings page for saving the API key.
+- `popup.js` - Logic to save the key to `chrome.storage`.
+- `style.css` - Styling for the injected box (scrollbars, animations).
+
+CHALLENGES I SOLVED:
+- Injecting UI that doesn't break the host page's CSS (used inline styles and high z-index).
+- Handling CORS by adding `host_permissions` in the manifest.
+- Managing async API states (showing "Thinking..." while waiting for OpenAI).
+- Disabling vibe buttons while a request is in flight to prevent double-clicking.
+
+WHAT I LEARNED:
+- Chrome Extension architecture (content scripts vs. popup).
+- Interacting with `chrome.storage` for secure client-side key storage.
+- DOM manipulation and event delegation on arbitrary websites.
+
+FUTURE IMPROVEMENTS:
+- Support for streaming AI responses.
+- Option to replace the original text directly on the page.
+- Support for more languages in the dictionary API.

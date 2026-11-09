@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CaroJoya's interactive portfolio. Pick a project and ask my AI anything.">
+    <meta name="theme-color" content="#a8e6cf">
+    <title>CaroJoya's Portfolio.exe</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-mint: #a8e6cf;
+            --bg-dark-mint: #80cba9;
+            --pink: #ff4d8a;
+            --pink-hover: #ff77a8;
+            --pink-soft: #ffb3c6;
+            --border: #1a1a1a;
+            --window-bg: #fdfaf6;
+            --mint-soft: #e2f4eb;
+            --yellow: #ffcc00;
+            --shadow: 6px 6px 0px var(--border);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'VT323', monospace; }
+
+        html { -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-mint);
+            background-image: radial-gradient(circle at 50% 50%, var(--bg-dark-mint) 2px, transparent 2.5px);
+            background-size: 24px 24px;
+            color: var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow: hidden;
+            animation: bgScroll 30s linear infinite;
+        }
+        @keyframes bgScroll { to { background-position: 24px 24px; } }
+
+        ::selection { background: var(--pink); color: white; }
+        :focus-visible { outline: 4px dashed var(--pink); outline-offset: 3px; }
+
+        /* Soft CRT scanline vignette over everything */
+        body::after {
+            content: "";
+            position: fixed; inset: 0;
+            pointer-events: none;
+            z-index: 200;
+            background:
+                repeating-linear-gradient(to bottom, rgba(0,0,0,0.035) 0, rgba(0,0,0,0.035) 1px, transparent 1px, transparent 3px),
+                radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,0.12) 100%);
+        }
+
+        /* ================= BACKGROUND DECOR ================= */
+        .clouds { position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0.6; overflow: hidden; }
+        .cloud { position: absolute; background-color: white; width: 120px; height: 40px; box-shadow: 20px -20px 0 0 white, 40px 0 0 0 white, 60px -10px 0 0 white; animation: drift linear infinite; }
+        .c1 { top: 10%; left: -200px; animation-duration: 25s; }
+        .c2 { top: 50%; left: -250px; animation-duration: 35s; animation-delay: -10s; transform: scale(0.8); }
+        .c3 { top: 80%; left: -150px; animation-duration: 20s; animation-delay: -5s; transform: scale(1.2); }
+        .c4 { top: 28%; left: -300px; animation-duration: 45s; animation-delay: -22s; transform: scale(0.6); opacity: .8; }
+        @keyframes drift { to { margin-left: 130vw; } }
+
+        .sparkles { position: absolute; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+        .sparkle {
+            position: absolute; width: 10px; height: 10px; background: white;
+            clip-path: polygon(40% 0, 60% 0, 60% 40%, 100% 40%, 100% 60%, 60% 60%, 60% 100%, 40% 100%, 40% 60%, 0 60%, 0 40%, 40% 40%);
+            animation: twinkle 2.4s steps(2) infinite; opacity: .9;
+        }
+        @keyframes twinkle { 0%, 100% { transform: scale(1); opacity: .9; } 50% { transform: scale(.4); opacity: .4; } }
+
+        /* ================= LANDING PAGE ================= */
+        #landing-page {
+            position: absolute; inset: 0;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 20; transition: opacity 0.5s ease-in-out;
+        }
+
+        .hero-content {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 10px; max-width: 1000px; width: 100%; padding: 20px; text-align: center;
+            margin-top: 80px; /* Push down to make room for the absolute ghost at the top */
+        }
+
+        .hero-title {
+            font-size: 4rem; color: var(--border); line-height: 1.1;
+            text-shadow: 3px 3px 0px var(--pink), 5px 5px 0px var(--border);
+            margin-bottom: 15px; letter-spacing: 1px;
+            animation: titleIn .8s cubic-bezier(.2,1.2,.4,1) both;
+        }
+        @keyframes titleIn { from { opacity: 0; transform: translateY(20px) scale(.95); } to { opacity: 1; transform: none; } }
+
+        .hero-subtitle {
+            font-size: 1.8rem; background: white; padding: 8px 16px;
+            border: 4px solid var(--border); box-shadow: 6px 6px 0px var(--border);
+            display: inline-block; transform: rotate(-2deg); margin-top: 10px;
+            animation: wobble 4s ease-in-out infinite;
+        }
+        .hero-subtitle .cursor { display: inline-block; width: 12px; height: 1.2rem; background: var(--pink); vertical-align: -2px; margin-left: 4px; animation: caret 1s steps(1) infinite; }
+        @keyframes caret { 50% { opacity: 0; } }
+        @keyframes wobble { 0%, 100% { transform: rotate(-2deg); } 50% { transform: rotate(-1deg) translateY(-3px); } }
+
+        .start-btn-wrapper { text-align: center; margin-top: 30px; width: 100%; }
+        .start-btn {
+            background-color: var(--pink); color: white; border: 4px solid var(--border);
+            padding: 16px 30px; font-family: 'Press Start 2P', monospace; font-size: 0.9rem;
+            cursor: pointer; box-shadow: 6px 6px 0px var(--border); transition: 0.1s;
+            text-shadow: 2px 2px 0px var(--border); animation: pulseBtn 1.6s steps(2) infinite;
+        }
+        .start-btn:hover { transform: translate(2px, 2px); box-shadow: 4px 4px 0px var(--border); background-color: var(--pink-hover); animation: none; }
+        .start-btn:active { transform: translate(6px, 6px); box-shadow: 0px 0px 0px var(--border); }
+        @keyframes pulseBtn { 50% { box-shadow: 6px 6px 0px var(--border), 0 0 0 6px rgba(255,77,138,.25); } }
+
+        /* ================= GHOST COMPANION (Global) ================= */
+        #ghost {
+            position: fixed; z-index: 25; cursor: pointer;
+            transition: top 1s cubic-bezier(0.25, 1, 0.5, 1), left 1s cubic-bezier(0.25, 1, 0.5, 1),
+                        width 1s cubic-bezier(0.25, 1, 0.5, 1), height 1s cubic-bezier(0.25, 1, 0.5, 1),
+                        transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+            filter: drop-shadow(6px 6px 0px rgba(0,0,0,0.15));
+        }
+        #ghost svg { width: 100%; height: 100%; display: block; animation: float 3s ease-in-out infinite; overflow: visible; }
+        #ghost:active svg { animation: hop .3s steps(3); }
+
+        /* Hero Position (Top Center) */
+        .ghost-hero { 
+            top: 18%; left: 50%; width: 100px; height: 100px;
+            transform: translate(-50%, -50%); 
+        }
+        
+        /* Corner Position (Bottom Right) */
+        .ghost-corner { 
+            top: calc(100% - 100px); left: calc(100% - 100px); width: 70px; height: 70px;
+            transform: translate(0, 0);
+        }
+
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes hop { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-22px) scale(1.1, .9); } 100% { transform: translateY(0) scale(1); } }
+
+        .eye { animation: blink 4s infinite; transform-origin: center; transform-box: fill-box; }
+        @keyframes blink { 0%, 90%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+
+        /* Speech Bubble Base */
+        .ghost-bubble {
+            position: absolute; min-width: 140px; max-width: 200px;
+            background: white; border: 3px solid var(--border); box-shadow: 4px 4px 0 var(--border);
+            padding: 8px 12px; font-size: 1.2rem; line-height: 1.15; text-align: center;
+            opacity: 0; pointer-events: none; transition: .2s steps(4); filter: none;
+        }
+
+        /* SPEECH BUBBLE: HERO (Ghost at top -> bubble points DOWN) */
+        .ghost-hero .ghost-bubble { 
+            top: 105%; left: 50%; transform: translateX(-50%) translateY(-8px) scale(.9);
+        }
+        .ghost-hero .ghost-bubble.show { 
+            opacity: 1; transform: translateX(-50%) translateY(0) scale(1); 
+        }
+        .ghost-hero .ghost-bubble::after {
+            content: ""; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+            border: 8px solid transparent; border-bottom-color: var(--border);
+        }
+
+        /* SPEECH BUBBLE: CORNER (Ghost at bottom -> bubble points UP) */
+        .ghost-corner .ghost-bubble { 
+            bottom: 105%; right: 0; transform: translateY(8px) scale(.9);
+        }
+        .ghost-corner .ghost-bubble.show { 
+            opacity: 1; transform: translateY(0) scale(1); 
+        }
+        .ghost-corner .ghost-bubble::after {
+            content: ""; position: absolute; top: 100%; right: 20px;
+            border: 8px solid transparent; border-top-color: var(--border);
+        }
+
+        /* ================= MAIN APP WINDOW ================= */
+        #app-container {
+            width: 100%; max-width: 850px; height: 85vh; height: 85dvh;
+            opacity: 0; pointer-events: none; transform: scale(0.9) translateY(10px);
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative; z-index: 10; margin: 0 12px;
+        }
+        #app-container.show-app { opacity: 1; pointer-events: auto; transform: none; }
+
+        .os-container {
+            width: 100%; height: 100%; background-color: var(--window-bg);
+            border: 4px solid var(--border); box-shadow: 8px 8px 0px var(--border), inset 2px 2px 0px rgba(255,255,255,0.8);
+            display: flex; flex-direction: column; position: relative; overflow: hidden;
+        }
+
+        /* Title Bar */
+        .title-bar {
+            background-color: var(--pink); border-bottom: 4px solid var(--border); padding: 10px 15px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            font-family: 'Press Start 2P', monospace; font-size: 0.8rem; color: white; text-shadow: 2px 2px 0px var(--border);
+            flex-shrink: 0; background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.08) 0 8px, transparent 8px 16px);
+        }
+        .title-bar > span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Press Start 2P', monospace; }
+
+        .window-controls { display: flex; gap: 8px; align-items: center; }
+        .window-controls span { display: block; width: 16px; height: 16px; background-color: white; border: 3px solid var(--border); box-shadow: 2px 2px 0px var(--border); }
+        .window-controls span:nth-child(1) { background: var(--yellow); }
+        .window-controls span:nth-child(2) { background: var(--bg-mint); }
+
+        .home-btn, .back-btn, .clear-btn {
+            background: white; border: 3px solid var(--border); padding: 6px 12px;
+            font-family: 'Press Start 2P', monospace; font-size: 0.6rem; color: var(--border);
+            cursor: pointer; box-shadow: 3px 3px 0px var(--border); transition: 0.1s;
+        }
+        .home-btn:hover, .back-btn:hover, .clear-btn:hover { background: var(--pink); color: white; }
+        .home-btn:active, .back-btn:active, .clear-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px var(--border); }
+
+        /* ================= SELECTION SCREEN ================= */
+        #selection-screen {
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            flex: 1; padding: 30px; position: relative; overflow-y: auto;
+            background-image: linear-gradient(45deg, #fdfaf6 25%, transparent 25%, transparent 75%, #fdfaf6 75%, #fdfaf6), linear-gradient(45deg, #fdfaf6 25%, transparent 25%, transparent 75%, #fdfaf6 75%, #fdfaf6);
+            background-size: 20px 20px; background-position: 0 0, 10px 10px; background-color: #f0e6d2;
+        }
+        .home-corner { position: absolute; top: 15px; right: 15px; }
+
+        h1 { font-family: 'Press Start 2P', monospace; font-size: 1.4rem; margin-bottom: 8px; text-align: center; line-height: 1.6; color: var(--border); }
+        .select-sub { font-size: 1.4rem; opacity: .7; text-align: center; }
+
+        .project-list { display: flex; flex-direction: column; gap: 16px; width: 100%; max-width: 480px; position: relative; z-index: 2; margin-top: 22px; }
+
+        .project-row { display: flex; gap: 10px; align-items: stretch; animation: rowIn .4s cubic-bezier(.2,1.2,.4,1) both; }
+        @keyframes rowIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
+
+        .project-btn {
+            flex: 1; background-color: white; border: 3px solid var(--border); padding: 15px 20px; font-size: 1.4rem; color: var(--border);
+            cursor: pointer; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 5px 5px 0px var(--border); transition: all 0.1s; font-family: 'VT323', monospace; text-align: left;
+        }
+        .project-btn .folder { display: flex; align-items: center; gap: 10px; }
+        .project-btn .folder svg { transition: transform .15s steps(2); }
+        .project-btn:hover { background-color: var(--pink); color: white; transform: translate(2px, 2px); box-shadow: 3px 3px 0px var(--border); }
+        .project-btn:hover .folder svg { transform: rotate(-8deg) scale(1.15); }
+        .project-btn:active { transform: translate(5px, 5px); box-shadow: 0px 0px 0px var(--border); }
+
+        .github-btn {
+            background-color: #e2e2e2; border: 3px solid var(--border); padding: 0 15px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--border); font-family: 'Press Start 2P', monospace; font-size: 0.6rem;
+            box-shadow: 5px 5px 0px var(--border); transition: all 0.1s; cursor: pointer;
+        }
+        .github-btn:hover { background-color: var(--border); color: white; transform: translate(2px, 2px); box-shadow: 3px 3px 0px var(--border); }
+        .github-btn:active { transform: translate(5px, 5px); box-shadow: 0px 0px 0px var(--border); }
+
+        .skeleton { height: 58px; border: 3px solid var(--border); background: linear-gradient(90deg, #fff 0 40%, var(--mint-soft) 50%, #fff 60% 100%); background-size: 300% 100%; animation: shimmer 1s linear infinite; box-shadow: 5px 5px 0 var(--border); }
+        @keyframes shimmer { to { background-position: -150% 0; } }
+
+        .error-box { text-align: center; background: white; border: 3px solid var(--border); box-shadow: 5px 5px 0 var(--border); padding: 18px; font-size: 1.4rem; }
+        .error-box b { color: var(--pink); }
+        .error-box small { display: block; opacity: .7; font-size: 1.15rem; margin: 6px 0 14px; }
+
+        /* ================= STATUS BAR ================= */
+        .status-bar {
+            flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+            padding: 6px 14px; border-top: 4px solid var(--border); background: var(--mint-soft); font-size: 1.2rem;
+        }
+        .status-bar .dot { display: inline-block; width: 10px; height: 10px; border: 2px solid var(--border); background: #999; margin-right: 6px; }
+        .status-bar .dot.on { background: #3ddc84; animation: blinkDot 2s steps(1) infinite; }
+        .status-bar .dot.off { background: var(--pink); }
+        @keyframes blinkDot { 50% { opacity: .4; } }
+
+        /* ================= CUSTOM ALERT MODAL ================= */
+        #custom-alert-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 100; justify-content: center; align-items: center; backdrop-filter: blur(2px);
+        }
+        .alert-box {
+            background-color: var(--window-bg); border: 4px solid var(--border); box-shadow: 8px 8px 0px var(--border);
+            width: 90%; max-width: 500px; padding: 20px; position: relative; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .alert-title-bar {
+            background-color: var(--yellow); border: 3px solid var(--border); padding: 5px 10px;
+            font-family: 'Press Start 2P', monospace; font-size: 0.7rem;
+            display: flex; justify-content: space-between; margin-bottom: 20px; color: var(--border);
+        }
+        .alert-title-bar span, .alert-title-bar button { font-family: 'Press Start 2P', monospace; }
+        .alert-title-bar button { background: none; border: none; cursor: pointer; font-size: .7rem; }
+        .alert-title-bar button:hover { color: var(--pink); }
+        .alert-content { font-size: 1.3rem; line-height: 1.4; margin-bottom: 25px; text-align: center; color: var(--border); }
+        .alert-buttons { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+        .alert-btn {
+            background-color: white; border: 3px solid var(--border); padding: 10px 20px;
+            font-family: 'Press Start 2P', monospace; font-size: 0.7rem; color: var(--border);
+            cursor: pointer; box-shadow: 3px 3px 0px var(--border); transition: 0.1s;
+        }
+        .alert-btn:hover { background-color: var(--pink); color: white; }
+        .alert-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px var(--border); }
+
+        /* ================= CHAT SCREEN ================= */
+        #chat-screen { display: none; flex-direction: column; flex: 1; min-height: 0; background-color: var(--window-bg); }
+        .chat-header { padding: 12px 20px; border-bottom: 4px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 10px; background-color: var(--mint-soft); flex-shrink: 0; }
+        .chat-header h2 { font-family: 'Press Start 2P', monospace; font-size: 0.9rem; text-transform: uppercase; color: var(--border); }
+        .header-actions { display: flex; gap: 10px; }
+
+        #chat-box {
+            flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
+            background-image: radial-gradient(var(--mint-soft) 2px, transparent 2.5px); background-size: 22px 22px; scroll-behavior: smooth;
+        }
+        #chat-box::-webkit-scrollbar { width: 16px; }
+        #chat-box::-webkit-scrollbar-track { background: var(--window-bg); border-left: 4px solid var(--border); }
+        #chat-box::-webkit-scrollbar-thumb { background: var(--pink); border: 3px solid var(--border); }
+
+        .msg-wrap { display: flex; flex-direction: column; max-width: 82%; animation: msgIn .25s cubic-bezier(.2,1.3,.4,1) both; }
+        .msg-wrap.user { align-self: flex-end; align-items: flex-end; }
+        .msg-wrap.ai { align-self: flex-start; align-items: flex-start; }
+        @keyframes msgIn { from { opacity: 0; transform: translateY(12px) scale(.96); } to { opacity: 1; transform: none; } }
+
+        .message { padding: 12px 18px; font-size: 1.3rem; line-height: 1.4; border: 3px solid var(--border); position: relative; word-wrap: break-word; overflow-wrap: anywhere; white-space: pre-wrap; }
+        .message.user { background-color: var(--pink); color: white; box-shadow: 4px 4px 0px var(--border); border-radius: 15px 15px 0px 15px; text-shadow: 1px 1px 0 rgba(0,0,0,.25); }
+        .message.ai { background-color: white; box-shadow: 4px 4px 0px var(--border); border-radius: 0px 15px 15px 15px; }
+        .message code { background: var(--mint-soft); border: 2px solid var(--border); padding: 0 5px; font-size: 1.15rem; }
+        .message pre { background: var(--border); color: var(--bg-mint); padding: 10px; margin: 8px 0 2px; overflow-x: auto; border: 2px solid var(--border); white-space: pre; }
+        .message pre code { background: none; border: none; padding: 0; color: inherit; }
+        .message a { color: var(--pink); text-decoration: underline; }
+        .message.ai.error { background: #fff0f4; border-color: var(--pink); }
+
+        .meta { font-size: 1.05rem; opacity: .55; margin-top: 5px; display: flex; gap: 10px; align-items: center; }
+        .copy-btn { background: none; border: none; cursor: pointer; font-size: 1.05rem; text-decoration: underline; opacity: .8; color: var(--border); }
+        .copy-btn:hover { color: var(--pink); }
+
+        .typing { display: flex; gap: 6px; height: 24px; align-items: center; }
+        .typing span { width: 12px; height: 12px; background-color: var(--pink); border: 2px solid var(--border); animation: pixelBounce 1s infinite steps(2); }
+        .typing span:nth-child(2) { animation-delay: 0.2s; } .typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pixelBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+        .input-area { padding: 16px 20px; border-top: 4px solid var(--border); display: flex; gap: 15px; background-color: var(--mint-soft); flex-shrink: 0; }
+        .input-wrap { flex: 1; position: relative; display: flex; }
+        input#user-input { flex: 1; width: 100%; padding: 12px 15px; font-size: 1.4rem; border: 4px solid var(--border); background-color: white; outline: none; box-shadow: inset 3px 3px 0px rgba(0,0,0,0.05); color: var(--border); }
+        input#user-input:focus { background-color: #fffdf5; box-shadow: inset 3px 3px 0 rgba(0,0,0,.05), 0 0 0 3px var(--pink-soft); }
+        input#user-input:disabled { background: #eee; }
+        .char-count { position: absolute; right: 10px; bottom: 2px; font-size: 1rem; opacity: .45; pointer-events: none; }
+
+        .send-btn { background-color: var(--pink); color: white; border: 4px solid var(--border); padding: 0 25px; font-family: 'Press Start 2P', monospace; font-size: 0.9rem; cursor: pointer; box-shadow: 4px 4px 0px var(--border); transition: 0.1s; text-shadow: 2px 2px 0px var(--border); }
+        .send-btn:hover:not(:disabled) { background-color: var(--pink-hover); }
+        .send-btn:active { transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--border); }
+        .send-btn:disabled { background-color: #999; cursor: not-allowed; transform: translate(4px, 4px); box-shadow: 0px 0px 0px var(--border); text-shadow: none; }
+
+        /* ================= RESPONSIVE ================= */
+        @media (max-width: 640px) {
+            .hero-title { font-size: 2.5rem; margin-top: 10px; }
+            .hero-subtitle { font-size: 1.4rem; }
+            .start-btn { font-size: .75rem; padding: 12px 20px; }
+            #app-container { height: 92vh; height: 92dvh; margin: 0 8px; }
+            h1 { font-size: 1rem; margin-top: 30px; }
+            .title-bar { font-size: .6rem; }
+            .chat-header h2 { font-size: .65rem; }
+            .msg-wrap { max-width: 92%; }
+            .send-btn { padding: 0 14px; font-size: .7rem; }
+            .input-area { padding-left: 12px; padding-right: 12px; }
+            .project-btn { font-size: 1.2rem; padding: 12px; }
+            .ghost-hero { width: 80px; height: 80px; top: 15%; }
+            .ghost-corner { top: calc(100% - 80px); left: calc(100% - 80px); width: 50px; height: 50px; }
+            .back-btn, .clear-btn { font-size: .5rem; padding: 6px 8px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="clouds" aria-hidden="true">
+        <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div><div class="cloud c4"></div>
+    </div>
+    <div class="sparkles" id="sparkles" aria-hidden="true"></div>
+
+    <!-- THE GHOST (Global) -->
+    <div id="ghost" class="ghost-hero" role="button" tabindex="0" aria-label="Pixel ghost companion. Click to say hi.">
+        <div class="ghost-bubble" id="ghost-bubble" aria-live="polite"></div>
+        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+            <path d="M4 2h8v1h2v2h1v8h-1v1h-2v1H4v-1H2v-1H1V5h1V3h2V2z" fill="#ff4d8a" stroke="#1a1a1a" stroke-width="0.5"/>
+            <path d="M1 13h2v1H1v-1zm3 0h2v1H4v-1zm3 0h2v1H7v-1zm3 0h2v1h-2v-1zm3 0h2v1h-2v-1z" fill="#ff4d8a" stroke="#1a1a1a" stroke-width="0.5"/>
+            <path d="M3 3h2v1H3V3z" fill="#ff77a8"/>
+            <g id="pupils">
+                <g class="eye">
+                    <path d="M5 6h2v3H5V6z" fill="#1a1a1a"/>
+                    <path d="M5 6h1v1H5V6z" fill="white"/>
+                </g>
+                <g class="eye">
+                    <path d="M9 6h2v3H9V6z" fill="#1a1a1a"/>
+                    <path d="M9 6h1v1H9V6z" fill="white"/>
+                </g>
+            </g>
+            <path d="M3 9h1v1H3V9zm9 0h1v1h-1V9z" fill="#ffb3c6"/>
+            <path d="M7 10h2v1H7v-1z" fill="#1a1a1a"/>
+            <path d="M12 2h1v1h1v1h-1v1h-1V4h-1V3h1V2z" fill="#ff4d8a"/>
+        </svg>
+    </div>
+
+    <!-- ================= CUSTOM ALERT MODAL ================= -->
+    <div id="custom-alert-overlay" role="dialog" aria-modal="true" aria-labelledby="alert-title">
+        <div class="alert-box">
+            <div class="alert-title-bar">
+                <span id="alert-title">⚠️ SYSTEM ALERT</span>
+                <button onclick="closeAlert()" aria-label="Close">[x]</button>
+            </div>
+            <div class="alert-content">
+                You can explore the project codebase, but <b>UniLeave</b> was made as an institute's request and is <b>not used for common people</b>.
+            </div>
+            <div class="alert-buttons">
+                <button class="alert-btn" onclick="closeAlert()">CANCEL</button>
+                <button class="alert-btn" id="alert-proceed" onclick="proceedToGithub()">PROCEED ↗</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= LANDING PAGE ================= -->
+    <div id="landing-page">
+        <div class="hero-content">
+            <h1 class="hero-title">EXPLORE CAROJOYA'S<br>PROJECTS.</h1>
+            <p class="hero-subtitle">Ask my AI anything.<span class="cursor"></span></p>
+        </div>
+
+        <div class="start-btn-wrapper">
+            <button class="start-btn" onclick="enterPortfolio()">START EXPLORING →</button>
+        </div>
+    </div>
+
+    <!-- ================= MAIN APP ================= -->
+    <div id="app-container">
+        <div class="os-container">
+
+            <!-- SELECTION SCREEN -->
+            <div id="selection-screen">
+                <div class="home-corner">
+                    <button class="home-btn" onclick="goHome()">🏠 HOME</button>
+                </div>
+
+                <h1>SELECT A PROJECT.EXE</h1>
+                <p class="select-sub">double-click... or just click once.</p>
+                <div class="project-list" id="project-list"></div>
+            </div>
+
+            <!-- CHAT SCREEN -->
+            <div id="chat-screen">
+                <div class="title-bar">
+                    <span id="active-project-name">PROJECT.EXE</span>
+                    <div class="window-controls" aria-hidden="true"><span></span><span></span><span></span></div>
+                </div>
+
+                <div class="chat-header">
+                    <h2>🤖 AI Terminal</h2>
+                    <div class="header-actions">
+                        <button class="clear-btn" onclick="clearChat()" title="Clear this conversation">🗑 CLEAR</button>
+                        <button class="back-btn" onclick="goBack()">← PROJECTS</button>
+                    </div>
+                </div>
+
+                <div id="chat-box" aria-live="polite"></div>
+
+                <div class="input-area">
+                    <div class="input-wrap">
+                        <input type="text" id="user-input" placeholder="Type a command..." autocomplete="off" maxlength="300" aria-label="Ask a question about this project">
+                        <span class="char-count" id="char-count"></span>
+                    </div>
+                    <button class="send-btn" id="send-btn" onclick="sendMessage()">RUN</button>
+                </div>
+            </div>
+
+            <!-- STATUS BAR -->
+            <div class="status-bar">
+                <span><i class="dot" id="status-dot"></i><span id="status-text">CONNECTING...</span></span>
+                <span id="status-clock">--:--</span>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // ---------- Config ----------
+        const API = "/api";
+        const githubLinks = {
+            "roboforge": "https://github.com/CaroJoya/Roboforge",
+            "unileave": "https://github.com/CaroJoya/Unileave",
+            "iconshrubs": "https://github.com/CaroJoya/IconShrubs",
+            "logshrubs": "https://github.com/CaroJoya/LogShrubs",
+            "textshrubs": "https://github.com/CaroJoya/TextShrubs"
+        };
+        const ghostQuips = [
+            "boo! ...just kidding.",
+            "psst, try the chat!",
+            "i live in your browser.",
+            "no bugs here. probably.",
+            "ask me about the code!",
+            "⭐ 1UP ⭐",
+            "i'm 100% pixels."
+        ];
+
+        // ---------- State ----------
+        let currentProject = "";
+        let hasLoadedProjects = false;
+        let pendingGithubUrl = "";
+        let inApp = false;
+        let busy = false;
+        const histories = {};   // per-project chat history so switching projects doesn't wipe it
+
+        const $ = id => document.getElementById(id);
+
+        // ---------- Helpers ----------
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+        }
+
+        // Tiny safe markdown: ```code```, `code`, **bold**, links
+        function renderMarkdown(raw) {
+            let t = esc(raw);
+            t = t.replace(/```(?:\w+)?\n?([\s\S]*?)```/g, (_, c) => `<pre><code>${c.replace(/\n$/, "")}</code></pre>`);
+            t = t.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+            t = t.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+            t = t.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+            return t;
+        }
+
+        function timeNow() {
+            return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        }
+
+        function updateClock() { $("status-clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }
+        setInterval(updateClock, 15000); updateClock();
+
+        function setStatus(online, text) {
+            $("status-dot").className = "dot " + (online ? "on" : "off");
+            $("status-text").textContent = text;
+        }
+
+        // ---------- Sparkles ----------
+        (function makeSparkles() {
+            const host = $("sparkles");
+            for (let i = 0; i < 16; i++) {
+                const s = document.createElement("i");
+                s.className = "sparkle";
+                s.style.left = Math.random() * 100 + "%";
+                s.style.top = Math.random() * 100 + "%";
+                s.style.animationDelay = (Math.random() * 2.4).toFixed(2) + "s";
+                s.style.animationDuration = (1.6 + Math.random() * 2).toFixed(2) + "s";
+                const sz = 6 + Math.random() * 10;
+                s.style.width = s.style.height = sz + "px";
+                host.appendChild(s);
+            }
+        })();
+
+        // ---------- Ghost ----------
+        const ghost = $("ghost");
+        const pupils = $("pupils");
+        const bubble = $("ghost-bubble");
+        let bubbleTimer;
+
+        document.addEventListener("mousemove", e => {
+            const r = ghost.getBoundingClientRect();
+            const dx = e.clientX - (r.left + r.width / 2);
+            const dy = e.clientY - (r.top + r.height / 2);
+            const d = Math.hypot(dx, dy) || 1;
+            const k = Math.min(1, d / 300);
+            pupils.setAttribute("transform", `translate(${(dx / d * 0.9 * k).toFixed(2)} ${(dy / d * 0.7 * k).toFixed(2)})`);
+        });
+
+        function ghostSay(text, ms = 2600) {
+            bubble.textContent = text;
+            bubble.classList.add("show");
+            clearTimeout(bubbleTimer);
+            bubbleTimer = setTimeout(() => bubble.classList.remove("show"), ms);
+        }
+        ghost.addEventListener("click", () => ghostSay(ghostQuips[Math.floor(Math.random() * ghostQuips.length)]));
+        ghost.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ghost.click(); } });
+        
+        // Initial greeting
+        setTimeout(() => ghostSay("hi! click start →", 3200), 1200);
+
+        // ---------- Alert Modal ----------
+        function showUniLeaveAlert(url) {
+            pendingGithubUrl = url;
+            $("custom-alert-overlay").style.display = "flex";
+            $("alert-proceed").focus();
+        }
+        function closeAlert() {
+            $("custom-alert-overlay").style.display = "none";
+            pendingGithubUrl = "";
+        }
+        function proceedToGithub() {
+            if (pendingGithubUrl) window.open(pendingGithubUrl, "_blank", "noopener");
+            closeAlert();
+        }
+        $("custom-alert-overlay").addEventListener("click", e => { if (e.target.id === "custom-alert-overlay") closeAlert(); });
+
+        // ---------- Navigation ----------
+        function enterPortfolio() {
+            if (inApp) return;
+            inApp = true;
+            const landing = $("landing-page");
+            landing.style.opacity = "0";
+            landing.style.pointerEvents = "none";
+
+            // Move ghost to corner
+            ghost.classList.replace("ghost-hero", "ghost-corner");
+            ghostSay("pick a project!", 2400);
+
+            setTimeout(() => {
+                $("app-container").classList.add("show-app");
+                if (!hasLoadedProjects) fetchProjects();
+            }, 600);
+        }
+
+        function goHome() {
+            inApp = false;
+            $("app-container").classList.remove("show-app");
+            
+            // Move ghost back to hero
+            ghost.classList.replace("ghost-corner", "ghost-hero");
+            ghostSay("welcome back!", 2000);
+
+            setTimeout(() => {
+                $("landing-page").style.opacity = "1";
+                $("landing-page").style.pointerEvents = "auto";
+            }, 400);
+
+            $("chat-screen").style.display = "none";
+            $("selection-screen").style.display = "flex";
+        }
+
+        function openChat(project) {
+            currentProject = project;
+            $("active-project-name").textContent = project.toUpperCase() + ".EXE";
+            $("selection-screen").style.display = "none";
+            $("chat-screen").style.display = "flex";
+
+            const chatBox = $("chat-box");
+            chatBox.innerHTML = "";
+            if (histories[project] && histories[project].length) {
+                histories[project].forEach(m => appendMessage(m.role, m.text, { instant: true, time: m.time }));
+            } else {
+                appendMessage("ai", `**SYSTEM:** AI initialized for **${project}**. What would you like to know?`, { instant: true, raw: false });
+            }
+            
+            chatBox.scrollTop = chatBox.scrollHeight;
+            $("user-input").focus();
+            
+            // Ghost prompt for chat
+            ghostSay("ask your question!", 2500);
+        }
+
+        function goBack() {
+            $("chat-screen").style.display = "none";
+            $("selection-screen").style.display = "flex";
+            // Ghost prompt for project selection
+            ghostSay("pick a project!", 2000);
+        }
+
+        function clearChat() {
+            if (busy) return;
+            histories[currentProject] = [];
+            openChat(currentProject);
+        }
+
+        // ---------- Projects ----------
+        function showSkeletons() {
+            $("project-list").innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+        }
+
+        async function fetchProjects() {
+            showSkeletons();
+            try {
+                const ctrl = new AbortController();
+                const t = setTimeout(() => ctrl.abort(), 8000);
+                const res = await fetch(`${API}/projects`, { signal: ctrl.signal });
+                clearTimeout(t);
+                if (!res.ok) throw new Error("bad status " + res.status);
+                const data = await res.json();
+                const list = $("project-list");
+                list.innerHTML = "";
+
+                if (!data.projects || data.projects.length === 0) {
+                    list.innerHTML = '<div class="error-box">No projects found.</div>';
+                    setStatus(true, "ONLINE · 0 PROJECTS");
+                    return;
+                }
+
+                hasLoadedProjects = true;
+                setStatus(true, `ONLINE · ${data.projects.length} PROJECTS`);
+
+                data.projects.forEach((project, idx) => {
+                    const lower = project.toLowerCase();
+                    const ghLink = githubLinks[lower];
+
+                    const row = document.createElement("div");
+                    row.className = "project-row";
+                    row.style.animationDelay = (idx * 0.08) + "s";
+
+                    const btn = document.createElement("button");
+                    btn.className = "project-btn";
+                    btn.innerHTML = `
+                        <span class="folder">
+                            <svg width="24" height="24" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">
+                                <path d="M1 3h5l1 1h8v10H1V3z" fill="#a8e6cf" stroke="#1a1a1a" stroke-width="1.5"/>
+                                <path d="M1 5h13v8H1V5z" fill="#e2f4eb" stroke="#1a1a1a" stroke-width="1.5"/>
+                            </svg>
+                            ${esc(project)}
+                        </span>
+                        <span>.exe</span>`;
+                    btn.onclick = () => openChat(project);
+                    row.appendChild(btn);
+
+                    if (ghLink) {
+                        const ghBtn = document.createElement("button");
+                        ghBtn.className = "github-btn";
+                        ghBtn.textContent = "GITHUB ↗";
+                        ghBtn.setAttribute("aria-label", `Open ${project} on GitHub`);
+                        ghBtn.onclick = () => lower === "unileave" ? showUniLeaveAlert(ghLink) : window.open(ghLink, "_blank", "noopener");
+                        row.appendChild(ghBtn);
+                    }
+                    list.appendChild(row);
+                });
+            } catch (e) {
+                hasLoadedProjects = false;
+                setStatus(false, "OFFLINE");
+                $("project-list").innerHTML = `
+                    <div class="error-box">
+                        <b>ERROR:</b> Backend offline.
+                        <small>Make sure the server is running at ${esc(API)}</small>
+                        <button class="alert-btn" onclick="fetchProjects()">↻ RETRY</button>
+                    </div>`;
+            }
+        }
+
+        // ---------- Chat ----------
+        function record(role, text, time) {
+            (histories[currentProject] = histories[currentProject] || []).push({ role, text, time });
+        }
+
+        function appendMessage(role, text, opts = {}) {
+            const chatBox = $("chat-box");
+            const wrap = document.createElement("div");
+            wrap.className = "msg-wrap " + role;
+
+            const msg = document.createElement("div");
+            msg.className = "message " + role + (opts.error ? " error" : "");
+            if (role === "user") msg.textContent = text; else msg.innerHTML = renderMarkdown(text);
+
+            const meta = document.createElement("div");
+            meta.className = "meta";
+            meta.innerHTML = `<span>${role === "user" ? "YOU" : "AI"} · ${opts.time || timeNow()}</span>`;
+            if (role === "ai" && !opts.error && !opts.noCopy) {
+                const cp = document.createElement("button");
+                cp.className = "copy-btn"; cp.textContent = "copy";
+                cp.onclick = () => navigator.clipboard.writeText(text).then(() => { cp.textContent = "copied!"; setTimeout(() => cp.textContent = "copy", 1200); });
+                meta.appendChild(cp);
+            }
+
+            wrap.appendChild(msg); wrap.appendChild(meta);
+            chatBox.appendChild(wrap);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return msg;
+        }
+
+        function typeInto(el, text, done) {
+            const chatBox = $("chat-box");
+            el.style.whiteSpace = "pre-wrap";
+            el.textContent = "";
+            let i = 0;
+            const step = Math.max(1, Math.ceil(text.length / 400));   // long answers type faster
+            (function tick() {
+                if (i < text.length) {
+                    el.textContent += text.slice(i, i + step);
+                    i += step;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    setTimeout(tick, 15);
+                } else {
+                    el.innerHTML = renderMarkdown(text);   // final pass: formatted
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    done && done();
+                }
+            })();
+        }
+
+        function setBusy(state) {
+            busy = state;
+            $("user-input").disabled = state;
+            $("send-btn").disabled = state;
+            if (!state) $("user-input").focus();
+        }
+
+        async function sendMessage() {
+            if (busy) return;
+            const input = $("user-input");
+            const question = input.value.trim();
+            if (!question) return;
+
+            appendMessage("user", question);
+            record("user", question, timeNow());
+            input.value = ""; updateCount();
+            setBusy(true);
+
+            const loading = appendMessage("ai", "", { noCopy: true });
+            loading.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+            loading.parentElement.querySelector(".meta").style.display = "none";
+
+            try {
+                const ctrl = new AbortController();
+                const t = setTimeout(() => ctrl.abort(), 45000);
+                const response = await fetch(`${API}/chat`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question, project: currentProject }),
+                    signal: ctrl.signal
+                });
+                clearTimeout(t);
+                if (!response.ok) throw new Error("bad status " + response.status);
+                const data = await response.json();
+                const answer = (data.answer ?? "").toString() || "(no response)";
+
+                setStatus(true, "ONLINE");
+                const stamp = timeNow();
+                const meta = loading.parentElement.querySelector(".meta");
+                meta.style.display = "";
+                meta.firstChild.textContent = `AI · ${stamp}`;
+                typeInto(loading, answer, () => {
+                    const cp = document.createElement("button");
+                    cp.className = "copy-btn"; cp.textContent = "copy";
+                    cp.onclick = () => navigator.clipboard.writeText(answer).then(() => { cp.textContent = "copied!"; setTimeout(() => cp.textContent = "copy", 1200); });
+                    meta.appendChild(cp);
+                    record("ai", answer, stamp);
+                    setBusy(false);
+                });
+            } catch (error) {
+                setStatus(false, "OFFLINE");
+                loading.classList.add("error");
+                loading.innerHTML = "<b>ERROR:</b> Connection failed. Is the backend running? Try again in a moment.";
+                const meta = loading.parentElement.querySelector(".meta");
+                meta.style.display = "";
+                meta.firstChild.textContent = `SYSTEM · ${timeNow()}`;
+                setBusy(false);
+            }
+        }
+
+        // ---------- Input handling ----------
+        function updateCount() {
+            const n = $("user-input").value.length;
+            $("char-count").textContent = n > 220 ? `${n}/300` : "";
+        }
+        $("user-input").addEventListener("input", updateCount);
+        $("user-input").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); sendMessage(); } });
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") closeAlert();
+            if (e.key === "Enter" && !inApp && e.target === document.body) enterPortfolio();
+        });
+
+        // Initial status ping so the bar is honest before the user even starts
+        fetch(`${API}/projects`).then(r => setStatus(r.ok, r.ok ? "ONLINE" : "OFFLINE")).catch(() => setStatus(false, "OFFLINE"));
+    </script>
+</body>
+</html>

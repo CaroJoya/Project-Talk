@@ -1,0 +1,122 @@
+PROJECT: IconShrubs
+TAGLINE: Transform your images into mystical pixel art icons ✨
+
+OVERVIEW:
+IconShrubs is a free web app that lets users upload an image (PNG or JPG),
+turn it into pixel art, and download it as a Windows icon file (.ico) or PNG.
+It has a magical/mystical purple-pink themed UI with glassmorphism cards,
+floating sparkles, and gradient animations.
+
+WHAT IT DOES (USER FLOW):
+1. User uploads an image via drag-and-drop or file browser.
+2. If the file is a PNG, the app asks if they want to remove the background
+   (optional, client-side, makes near-white pixels transparent).
+3. User chooses between "Original Image" or "Pixelated" style.
+4. If pixelated, user picks a pixel block size from 1px to 24px using
+   preset buttons (Tiny=1, Small=4, Medium=8, Large=16, Giant=24)
+   or a fine-tune slider.
+5. User sees a live side-by-side preview: original vs pixelated.
+6. Zoom controls (100%-400%, +50% steps) with drag-to-pan on a zoomed canvas.
+7. User can download as PNG directly, or convert to .ico via a backend API.
+8. A tutorial section at the bottom explains how to apply the .ico file
+   to a Windows desktop shortcut (right-click → Properties → Change Icon).
+
+KEY FEATURES:
+- Drag-and-drop upload zone with visual feedback (border glows, scale-up)
+- File validation: PNG/JPG only, max 10MB, dimensions 64x64 to 2048x2048
+- Optional background removal for PNGs (client-side canvas pixel manipulation)
+- Pixelation toggle: switch between original and pixelated versions anytime
+- Preset pixel sizes + fine-tune slider (1-24px) with keyboard arrow support
+- Live preview canvas with imageRendering: 'pixelated' for sharp blocks
+- Zoom controls (100%, 150%, 200%, 250%, 300%, 350%, 400%) with pan
+- Download as PNG (canvas.toDataURL) or .ico (POST to backend)
+- Accessible: ARIA labels, screen reader announcements, keyboard navigation
+- Success toast notification on download
+- Error messages with friendly text for file type, size, dimension, network errors
+- Fully responsive layout (mobile + desktop)
+
+HOW PIXELATION WORKS (TECHNICAL):
+1. Draw the source image onto a temporary canvas scaled DOWN to
+   (width / blockSize) x (height / blockSize). This averages colors
+   into big blocks.
+2. Create a result canvas at the original size.
+3. Set resultCtx.imageSmoothingEnabled = false (critical for sharp pixels).
+4. Draw the small temp canvas back UP to full size onto the result canvas.
+5. Result: chunky pixel-art look with hard edges, no blur.
+If blockSize is 1, it just returns a copy of the original (no pixelation).
+
+TECH STACK:
+Frontend:
+- React 18 + TypeScript
+- Vite (build tool, dev server with /api proxy to localhost:3001)
+- Tailwind CSS (custom glass-card, gradient-text, mystical-glow classes)
+- lucide-react for icons
+- Custom CSS animations (float, pulseGlow, gradientShift, sparkle)
+
+Backend:
+- Express.js (server.js) for local dev on port 3001
+- Vercel serverless function (api/convert-to-ico.ts) for production
+- sharp: resizes incoming PNG to 256x256 with transparent padding
+- png-to-ico: converts the resized PNG buffer to proper .ico format
+
+ARCHITECTURE / FILE STRUCTURE:
+- src/App.tsx — main page, orchestrates all sections
+- src/hooks/useImageUpload.ts — file upload, validation, background removal
+- src/hooks/usePixelate.ts — pixel size state, apply pixelation, toggle
+- src/hooks/useZoom.ts — zoom level (100-400%, 50% steps)
+- src/utils/pixelateImage.ts — core pixelation algorithm (downscale + upscale)
+- src/utils/validateImage.ts — file type, size, dimension checks
+- src/utils/errorMessages.ts — user-friendly error mapping
+- src/components/ — 13 components (UploadZone, PixelSlider, ZoomedCanvas,
+  BackgroundRemovalPrompt, Tutorial, etc.)
+- api/convert-to-ico.ts — Vercel serverless endpoint
+- server.js — Express equivalent for local dev
+
+ICO CONVERSION FLOW:
+1. Frontend: canvas.toDataURL('image/png') → strip base64 prefix.
+2. POST { image: base64 } to /api/convert-to-ico.
+3. Backend: Buffer.from(base64, 'base64') → sharp resize to 256x256
+   (fit: 'contain', transparent background) → pngToIco(buffer).
+4. Response: image/x-icon with Content-Disposition: attachment.
+5. Frontend: response.blob() → createObjectURL → trigger download →
+   revokeObjectURL. File saved as pixelicon_[timestamp].ico.
+
+WHY ICO NEEDS A BACKEND:
+Browsers cannot natively generate .ico files. The .ico format wraps
+PNG data with a specific header that JS cannot produce reliably.
+So we send the PNG to the server, use sharp + png-to-ico (Node libs),
+and stream the .ico back as a binary download.
+
+CHALLENGES I SOLVED:
+- Pixelation blurriness: fixed by disabling imageSmoothingEnabled on the
+  upscale step, otherwise the browser anti-aliases the blocks.
+- ICO conversion in-browser: impossible without a library, so built a
+  serverless function (works on both Express and Vercel).
+- Background removal without a paid API: wrote a simple client-side
+  heuristic (r,g,b > 200 → alpha 0), no external service needed.
+- Zoom + pan UX: implemented manual scroll-position tracking on mousedown/
+  mousemove instead of using a heavy library.
+- Drag-and-drop flicker: used a dragCounter ref to handle nested
+  dragenter/dragleave events correctly.
+- Accessibility: added sr-only live regions, focus management on modals,
+  keyboard support (Enter/Space to open file picker, arrow keys on slider).
+
+LIMITATIONS / KNOWN ISSUES:
+- Background removal is naive (only handles near-white backgrounds).
+- Max image size 2048x2048 (larger images rejected).
+- Free-tier deployment limits apply if hosted on Vercel free plan.
+- .ico file is always 256x256 (single size, no multi-resolution ICO).
+
+WHAT I LEARNED:
+- Canvas pixel manipulation and imageSmoothingEnabled behavior.
+- How the .ico binary format differs from PNG (and why a backend is needed).
+- Building accessible React components (ARIA roles, focus, live regions).
+- Structuring a Vite + Express + Vercel hybrid project.
+- Writing a serverless function that mirrors a local Express route.
+
+FUTURE IMPROVEMENTS:
+- Real AI background removal (e.g. remove.bg or a small ONNX model).
+- Multi-resolution .ico (16, 32, 48, 256 in one file).
+- Batch upload / convert multiple images.
+- Save user preferences (pixel size, style) in localStorage.
+- Add SVG export option.

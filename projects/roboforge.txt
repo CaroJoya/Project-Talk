@@ -1,0 +1,63 @@
+PROJECT: RoboForge
+TAGLINE: The social network for robotics enthusiasts to share, collaborate, and learn.
+
+OVERVIEW:
+RoboForge is a full-stack social media platform built specifically for the robotics community. It allows makers to share their designs, get feedback, find collaborators, and learn from others. The UI features a sleek dark mode with neon blue accents.
+
+WHAT IT DOES (USER FLOW):
+1. Users can register and create a profile with a bio and profile picture.
+2. Users can upload images of their robot designs, add a caption, and tag them (e.g., #arduino, #ros, #3dprinting).
+3. A real-time messaging system allows users to chat with each other (built with WebSockets).
+4. An explore page shows a masonry grid of designs from across the platform.
+5. Users can like, comment, save (bookmark), and download designs they like.
+6. A follow system lets users build a network.
+7. A notification system alerts users about likes, comments, follows, and messages.
+8. Advanced search allows finding users, designs, or specific tags.
+9. Users can delete their own posts, which cascades to remove all associated likes, comments, and notifications.
+
+KEY FEATURES:
+- User Authentication (Login/Register/Logout)
+- Profile management (bio, profile photo upload)
+- Post creation with image upload & tagging
+- Explore page (masonry grid)
+- Like, Comment, Save, Download systems
+- Real-time messaging with typing indicators
+- Follow system with follower/following counts
+- Notification system (likes, comments, follows)
+- Tag-based search
+- Accessible and responsive UI
+
+TECH STACK:
+Frontend: HTML, CSS, Vanilla JavaScript, Font Awesome (Icons).
+Backend: PHP (Core), Node.js (Socket.IO for real-time messaging).
+Database: MySQL.
+Architecture: Monolithic PHP app with a separate Node.js server for WebSocket connections.
+
+ARCHITECTURE / FILE STRUCTURE:
+- `index.php` - Landing page
+- `explore.php` - Masonry grid of posts
+- `post.php` - Single post view with comments
+- `profile.php` - User profile with grid of own posts
+- `upload.php` - Upload form with tags and preview
+- `messages.php` - Chat interface (Socket.IO integration)
+- `send_message.php`, `mark_read.php` - API endpoints for messaging
+- `session.php` - Core auth and security logic
+- `server.js` - Socket.IO server for real-time chat
+- `*.php` - Various API endpoints for likes, follows, notifications, etc.
+
+CHALLENGES I SOLVED:
+- Implementing real-time chat using Socket.IO alongside a traditional PHP monolith.
+- Handling cascading deletes (when a post is deleted, all its likes/comments/notifications must be deleted safely within a database transaction).
+- Building a responsive masonry layout without heavy CSS frameworks.
+- Securing file uploads (validating MIME types, file extensions, and sizes).
+
+WHAT I LEARNED:
+- Integrating WebSockets (Socket.IO) with a traditional LAMP stack.
+- Advanced SQL queries (joins, subqueries for follower counts, unread message counts).
+- Secure file handling in PHP.
+- State management and event handling in Vanilla JS.
+
+FUTURE IMPROVEMENTS:
+- Migrate to a modern frontend framework (React/Vue).
+- Implement a proper REST/GraphQL API instead of separate PHP files for every action.
+- Add push notifications.
