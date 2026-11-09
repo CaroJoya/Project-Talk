@@ -76,7 +76,7 @@ def chat(request: ChatRequest):
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.5-flash', # Or whichever model worked for you locally
+            model='gemini-3.8-flash', # Or whichever model worked for you locally
             contents=prompt
         )
         return {"answer": response.text}
