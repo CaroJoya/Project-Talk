@@ -15,7 +15,6 @@ client = genai.Client(api_key=api_key) if api_key else None
 # 3. Setup FastAPI
 app = FastAPI()
 
-# Allow frontend to talk to this backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -23,26 +22,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 4. Smart Path Resolver for Vercel & Local
+# 4. Smart Path Resolver
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 folder_path = os.path.join(BASE_DIR, "projects")
 
-# ==========================================
-# ENDPOINT: Get List of Projects
-# ==========================================
 @app.get("/api/projects")
 def get_projects():
     if not os.path.exists(folder_path):
-        print(f"Folder not found at: {folder_path}")
         return {"projects": []}
     
     files = [f.replace(".txt", "") for f in os.listdir(folder_path) if f.endswith(".txt")]
     files.sort()
     return {"projects": files}
 
-# ==========================================
-# ENDPOINT: Chat with a Specific Project
-# ==========================================
 class ChatRequest(BaseModel):
     question: str
     project: str
@@ -50,6 +42,7 @@ class ChatRequest(BaseModel):
 @app.post("/api/chat")
 def chat(request: ChatRequest):
     if not client:
+        print("ERROR: Gemini client not initialized. API key missing.")
         return {"answer": "Error: GEMINI_API_KEY is not set in the environment variables."}
 
     file_path = os.path.join(folder_path, f"{request.project}.txt")
@@ -75,10 +68,16 @@ def chat(request: ChatRequest):
     """
     
     try:
+        # Using the stable 3.6-flash model
         response = client.models.generate_content(
-            model='gemini-3.8-flash', # Or whichever model worked for you locally
+            model='gemini-3.6-flash', 
             contents=prompt
         )
         return {"answer": response.text}
     except Exception as e:
+        # THIS IS THE MAGIC LINE: It prints the exact error to Vercel's logs
+        print(f"--- GEMINI API ERROR ---")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error details: {str(e)}")
+        print(f"------------------------")
         return {"answer": f"Oops, my brain is tired right now. Error: {str(e)}"}
